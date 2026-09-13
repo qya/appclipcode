@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apple App Clip Code Generator (Rust & WASM)</title>
+  <style>
+    :root {
+      --bg: #0d0f12;
+      --card-bg: #161a20;
+      --border: #262c36;
+      --accent: #0071e3;
+      --accent-hover: #0077ed;
+      --text: #f5f5f7;
+      --text-muted: #86868b;
+      --input-bg: #1e232b;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+      max-width: 640px;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #fff 40%, #86868b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      max-width: 960px;
+      width: 100%;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .preset-chip {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      padding: 4px 10px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .preset-chip:hover {
+      border-color: var(--text-muted);
+      color: var(--text);
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .radio-pill {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+
+    .radio-pill input {
+      display: none;
+    }
+
+    .radio-pill.active {
+      border-color: var(--accent);
+      background: rgba(0, 113, 227, 0.15);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .color-mode-tabs {
+      display: flex;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+    }
+
+    .tab-btn.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+
+    .color-pickers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .color-input-wrapper {
+      display: flex;
+      align-items: center;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+    }
+
+    .color-input-wrapper input[type="color"] {
+      border: none;
+      background: none;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+
+    .color-input-wrapper input[type="text"] {
+      border: none;
+      background: none;
+      padding: 0;
+      font-size: 0.9rem;
+    }
+
+    .preview-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .svg-container {
+      width: 100%;
+      max-width: 340px;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 20px 0;
+      filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.5));
+    }
+
+    .svg-container svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .error-msg {
+      color: #ff453a;
+      background: rgba(255, 69, 58, 0.1);
+      border: 1px solid rgba(255, 69, 58, 0.3);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      display: none;
+      width: 100%;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+
+    .decoder-card {
+      max-width: 960px;
+      width: 100%;
+      margin-top: 32px;
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: monospace;
+      font-size: 0.85rem;
+      padding: 12px;
+      outline: none;
+      height: 100px;
+      margin-bottom: 12px;
+    }
+
+    .decoded-result {
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(0, 113, 227, 0.1);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.95rem;
+      display: none;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>App Clip Code Generator</h1>
+    <p>High-performance pure Rust & WebAssembly port of Apple's App Clip Code format. Bit-accurate URL compression and circular vector rendering directly in your browser.</p>
+  </header>
+
+  <div class="container">
+    <!-- Generator Controls -->
+    <div class="card">
+      <div class="form-group">
+        <label for="url">Target URL (HTTPS)</label>
+        <input type="text" id="url" value="https://example.com" placeholder="https://example.com">
+        <div class="presets">
+          <span class="preset-chip" data-url="https://example.com">example.com</span>
+          <span class="preset-chip" data-url="https://a.co">a.co</span>
+          <span class="preset-chip" data-url="https://www.apple.com">apple.com</span>
+          <span class="preset-chip" data-url="https://app.nextdns.io?p=a&p1=b">nextdns.io</span>
+          <span class="preset-chip" data-url="https://qr.netflix.com/watch">netflix.com</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Code Type</label>
+        <div class="radio-group">
+          <label class="radio-pill active" id="pill-cam">
+            <input type="radio" name="codeType" value="cam" checked> Camera
+          </label>
+          <label class="radio-pill" id="pill-nfc">
+            <input type="radio" name="codeType" value="nfc"> NFC
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Appearance & Colors</label>
+        <div class="color-mode-tabs">
+          <button class="tab-btn active" id="tab-template">Preset Templates</button>
+          <button class="tab-btn" id="tab-custom">Custom Colors</button>
+        </div>
+
+        <div id="section-template">
+          <select id="template-select"></select>
+        </div>
+
+        <div id="section-custom" style="display: none;">
+          <div class="color-pickers">
+            <div>
+              <label style="font-size:0.75rem;">Foreground</label>
+              <div class="color-input-wrapper">
+                <input type="color" id="fg-color" value="#ffffff">
+                <input type="text" id="fg-hex" value="FFFFFF" maxlength="8">
+              </div>
+            </div>
+            <div>
+              <label style="font-size:0.75rem;">Background</label>
+              <div class="color-input-wrapper">
+                <input type="color" id="bg-color" value="#000000">
+                <input type="text" id="bg-hex" value="000000" maxlength="8">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="png-size">PNG Export Dimension</label>
+        <select id="png-size">
+          <option value="512">512 x 512 px</option>
+          <option value="800" selected>800 x 800 px (Original)</option>
+          <option value="1024">1024 x 1024 px</option>
+          <option value="1600">1600 x 1600 px (2x Retina)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Preview Area -->
+    <div class="card preview-card">
+      <div class="error-msg" id="error-box"></div>
+      <div class="svg-container" id="svg-preview">
+        <span>Initializing WebAssembly...</span>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btn-download-svg">Download SVG</button>
+        <button class="btn btn-secondary" id="btn-download-png">Download PNG</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SVG Decoder Tool -->
+  <div class="card decoder-card">
+    <label>Read / Decode App Clip Code SVG</label>
+    <p style="color:var(--text-muted); font-size: 0.9rem; margin-bottom: 12px;">Paste raw SVG XML below to extract and decompress the encoded URL using the Rust WASM decoder:</p>
+    <textarea id="svg-input" placeholder="Paste <svg>...</svg> code here"></textarea>
+    <button class="btn btn-secondary" id="btn-decode-svg" style="max-width: 200px;">Decode SVG</button>
+    <div class="decoded-result" id="decoded-result"></div>
+  </div>
+
+  <script type="module">
+    import init, {
+      generate_svg,
+      generate_custom_svg,
+      svg_to_png_blob,
+      decode_svg,
+      get_templates
+    } from "./appclipcode.js";
+
+    let wasmReady = false;
+    let currentSvg = "";
+    let colorMode = "template";
+
+    const urlInput = document.getElementById("url");
+    const templateSelect = document.getElementById("template-select");
+    const svgPreview = document.getElementById("svg-preview");
+    const errorBox = document.getElementById("error-box");
+    const pillCam = document.getElementById("pill-cam");
+    const pillNfc = document.getElementById("pill-nfc");
+    const tabTemplate = document.getElementById("tab-template");
+    const tabCustom = document.getElementById("tab-custom");
+    const secTemplate = document.getElementById("section-template");
+    const secCustom = document.getElementById("section-custom");
+    const fgColor = document.getElementById("fg-color");
+    const fgHex = document.getElementById("fg-hex");
+    const bgColor = document.getElementById("bg-color");
+    const bgHex = document.getElementById("bg-hex");
+    const pngSize = document.getElementById("png-size");
+
+    async function start() {
+      try {
+        await init();
+        wasmReady = true;
+
+        // Populate templates
+        const tmpls = get_templates();
+        tmpls.forEach(t => {
+          const opt = document.createElement("option");
+          opt.value = t.index;
+          opt.textContent = `Template ${t.index} (${t.foreground} on ${t.background})`;
+          templateSelect.appendChild(opt);
+        });
+
+        render();
+      } catch (err) {
+        showError("Failed to initialize WASM: " + err);
+      }
+    }
+
+    function getCodeType() {
+      return document.querySelector('input[name="codeType"]:checked').value;
+    }
+
+    function render() {
+      if (!wasmReady) return;
+      hideError();
+
+      const url = urlInput.value.trim();
+      const codeType = getCodeType();
+
+      try {
+        if (colorMode === "template") {
+          const idx = parseInt(templateSelect.value, 10) || 0;
+          currentSvg = generate_svg(url, idx, codeType);
+        } else {
+          currentSvg = generate_custom_svg(url, fgHex.value.trim(), bgHex.value.trim(), codeType);
+        }
+        svgPreview.innerHTML = currentSvg;
+      } catch (err) {
+        showError(err);
+      }
+    }
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.style.display = "block";
+    }
+
+    function hideError() {
+      errorBox.style.display = "none";
+    }
+
+    // Event listeners
+    urlInput.addEventListener("input", render);
+    templateSelect.addEventListener("change", render);
+
+    document.querySelectorAll(".preset-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        urlInput.value = chip.dataset.url;
+        render();
+      });
+    });
+
+    pillCam.addEventListener("click", () => {
+      pillCam.classList.add("active");
+      pillNfc.classList.remove("active");
+      pillCam.querySelector("input").checked = true;
+      render();
+    });
+
+    pillNfc.addEventListener("click", () => {
+      pillNfc.classList.add("active");
+      pillCam.classList.remove("active");
+      pillNfc.querySelector("input").checked = true;
+      render();
+    });
+
+    tabTemplate.addEventListener("click", () => {
+      colorMode = "template";
+      tabTemplate.classList.add("active");
+      tabCustom.classList.remove("active");
+      secTemplate.style.display = "block";
+      secCustom.style.display = "none";
+      render();
+    });
+
+    tabCustom.addEventListener("click", () => {
+      colorMode = "custom";
+      tabCustom.classList.add("active");
+      tabTemplate.classList.remove("active");
+      secTemplate.style.display = "none";
+      secCustom.style.display = "block";
+      render();
+    });
+
+    fgColor.addEventListener("input", (e) => {
+      fgHex.value = e.target.value.replace("#", "").toUpperCase();
+      render();
+    });
+    fgHex.addEventListener("input", (e) => {
+      if (e.target.value.length === 6) {
+        fgColor.value = "#" + e.target.value;
+      }
+      render();
+    });
+
+    bgColor.addEventListener("input", (e) => {
+      bgHex.value = e.target.value.replace("#", "").toUpperCase();
+      render();
+    });
+    bgHex.addEventListener("input", (e) => {
+      if (e.target.value.length === 6) {
+        bgColor.value = "#" + e.target.value;
+      }
+      render();
+    });
+
+    // Download SVG
+    document.getElementById("btn-download-svg").addEventListener("click", () => {
+      if (!currentSvg) return;
+      const blob = new Blob([currentSvg], { type: "image/svg+xml" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "appclipcode.svg";
+      a.click();
+    });
+
+    // Download PNG
+    document.getElementById("btn-download-png").addEventListener("click", async () => {
+      if (!wasmReady || !currentSvg) return;
+      const size = parseInt(pngSize.value, 10) || 800;
+
+      try {
+        const blob = await svg_to_png_blob(currentSvg, size);
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "appclipcode.png";
+        a.click();
+      } catch (err) {
+        showError("PNG export error: " + err);
+      }
+    });
+
+    // Decode SVG
+    document.getElementById("btn-decode-svg").addEventListener("click", () => {
+      const input = document.getElementById("svg-input").value.trim();
+      const resBox = document.getElementById("decoded-result");
+      if (!input) {
+        resBox.style.display = "none";
+        return;
+      }
+      try {
+        const decoded = decode_svg(input);
+        if (decoded.startsWith("http://") || decoded.startsWith("https://")) {
+          resBox.textContent = "Decoded URL: " + decoded;
+        } else {
+          resBox.textContent = "Decoded Payload (Version 8): " + decoded;
+        }
+        resBox.style.display = "block";
+      } catch (err) {
+        resBox.textContent = "Error decoding SVG: " + err;
+        resBox.style.display = "block";
+      }
+    });
+
+    start();
+  </script>
+</body>
+</html>

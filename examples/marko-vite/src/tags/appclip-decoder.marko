@@ -1,0 +1,194 @@
+import { init, read_svg } from "../lib/appclipcode.js";
+
+<let/inputSvg = "">
+<let/decodedResult = "">
+<let/decodedType = "">
+<let/error = "">
+<let/ready = false>
+
+<lifecycle
+  async onMount() {
+    await init();
+    ready = true;
+  }
+/>
+
+<script>
+  function handleDecode() {
+    if (!inputSvg.trim()) {
+      error = "Please paste an SVG code snippet or select a sample.";
+      decodedResult = "";
+      return;
+    }
+    try {
+      const res = read_svg(inputSvg.trim());
+      if (res.startsWith("http://") || res.startsWith("https://")) {
+        decodedType = "URL (Version 0/1)";
+      } else {
+        decodedType = "Raw Binary Token (Version 8 Optical Code)";
+      }
+      decodedResult = res;
+      error = "";
+    } catch (err) {
+      error = String(err);
+      decodedResult = "";
+      decodedType = "";
+    }
+  }
+
+  function handleFileUpload(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      inputSvg = reader.result;
+      handleDecode();
+    };
+    reader.readAsText(file);
+  }
+
+  function clearAll() {
+    inputSvg = "";
+    decodedResult = "";
+    decodedType = "";
+    error = "";
+  }
+</script>
+
+<div class="decoder-card">
+  <div class="decoder-header">
+    <h3>Scan / Decode SVG</h3>
+    <p class="desc">
+      Supports standard App Clip URLs (v0/v1) and Version 8 optical tokens (Vision Pro ZEISS, Apple Pay).
+    </p>
+  </div>
+
+  <div class="input-area">
+    <label class="file-drop-btn">
+      <input type="file" accept=".svg" onChange=handleFileUpload />
+      Upload .svg file
+    </label>
+    <span class="or-text">or paste SVG XML:</span>
+    <textarea
+      class="svg-textarea"
+      value:=inputSvg
+      placeholder="<svg data-design=\"Fingerprint\" ...>...</svg>"
+      rows="4"
+    />
+  </div>
+
+  <div class="button-row">
+    <button class="btn btn-primary" onClick=handleDecode>
+      Decode Code
+    </button>
+    <button class="btn btn-secondary" onClick=clearAll>
+      Clear
+    </button>
+  </div>
+
+  <if=error>
+    <div class="decode-box error">
+      <strong>Error:</strong> ${error}
+    </div>
+  </if>
+  <else if=decodedResult>
+    <div class="decode-box success">
+      <div class="result-badge">${decodedType}</div>
+      <div class="result-value">${decodedResult}</div>
+    </div>
+  </else>
+</div>
+
+<style>
+  .decoder-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eaeaea;
+  }
+  .decoder-header h3 {
+    margin: 0 0 4px 0;
+    font-size: 1.25rem;
+    color: #111;
+  }
+  .desc {
+    margin: 0 0 16px 0;
+    font-size: 0.875rem;
+    color: #666;
+  }
+  .input-area {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .file-drop-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    background: #f1f3f5;
+    border: 1px dashed #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: #333;
+    font-weight: 500;
+  }
+  .file-drop-btn input {
+    display: none;
+  }
+  .file-drop-btn:hover {
+    background: #e9ecef;
+  }
+  .or-text {
+    font-size: 0.8rem;
+    color: #888;
+    text-align: center;
+  }
+  .svg-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    font-family: ui-monospace, monospace;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    resize: vertical;
+  }
+  .button-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .decode-box {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    word-break: break-all;
+  }
+  .decode-box.error {
+    background: #fee;
+    color: #c00;
+    border: 1px solid #fcc;
+  }
+  .decode-box.success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+  }
+  .result-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #15803d;
+    margin-bottom: 4px;
+  }
+  .result-value {
+    font-family: ui-monospace, monospace;
+    font-weight: 600;
+    color: #111;
+  }
+</style>

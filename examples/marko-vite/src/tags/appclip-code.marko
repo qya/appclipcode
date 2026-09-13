@@ -1,0 +1,133 @@
+import { init, generate_svg, svg_to_png_blob } from "../lib/appclipcode.js";
+
+<let/ready = false>
+<let/svg = "">
+<let/error = "">
+<let/loading = true>
+
+<lifecycle
+  async onMount() {
+    await init();
+    ready = true;
+    loading = false;
+    updateCode();
+  }
+  onUpdate() {
+    if (ready) {
+      updateCode();
+    }
+  }
+/>
+
+<script>
+  function updateCode() {
+    const url = input.url || "https://example.com";
+    const template = input.template ?? 0;
+    const codeType = input.codeType ?? "cam";
+    try {
+      svg = generate_svg(url, template, codeType);
+      error = "";
+    } catch (err) {
+      error = String(err);
+      svg = "";
+    }
+  }
+
+  function downloadSvg() {
+    if (!svg) return;
+    const blob = new Blob([svg], { type: "image/svg+xml" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "appclipcode.svg";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  async function downloadPng() {
+    if (!svg) return;
+    try {
+      const blob = await svg_to_png_blob(svg, 800);
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "appclipcode.png";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (err) {
+      alert("Failed to rasterize PNG: " + err);
+    }
+  }
+</script>
+
+<div class="appclip-card">
+  <if=error>
+    <div class="status error">
+      <strong>Generation Error:</strong> ${error}
+    </div>
+  </if>
+  <else if=loading>
+    <div class="status loading">
+      <span>Loading WebAssembly engine...</span>
+    </div>
+  </else>
+  <else if=svg>
+    <div class="preview-container" style={ "max-width": (input.size || 340) + "px" }>
+      $!{svg}
+    </div>
+    <div class="action-row">
+      <button class="btn btn-secondary" onClick=downloadSvg>
+        Download SVG
+      </button>
+      <button class="btn btn-primary" onClick=downloadPng>
+        Download PNG (800px)
+      </button>
+    </div>
+  </else>
+</div>
+
+<style>
+  .appclip-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .preview-container {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.08));
+    transition: transform 0.2s ease;
+  }
+  .preview-container:hover {
+    transform: scale(1.02);
+  }
+  .preview-container svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .action-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
+  }
+  .status {
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    width: 100%;
+    text-align: center;
+  }
+  .status.error {
+    background: #fff2f2;
+    color: #d93025;
+    border: 1px solid #ffcdd2;
+  }
+  .status.loading {
+    background: #f8f9fa;
+    color: #666;
+  }
+</style>

@@ -1,0 +1,269 @@
+import { init, get_templates } from "./lib/appclipcode.js";
+
+<let/url = "https://example.com">
+<let/templateIndex = 0>
+<let/codeType = "cam">
+<let/templates = []>
+
+<lifecycle
+  async onMount() {
+    await init();
+    try {
+      templates = get_templates();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+/>
+
+<div class="container">
+  <header class="header">
+    <div class="badge">Marko.js + Vite + Rust WASM</div>
+    <h1>Apple App Clip Code Generator & Decoder</h1>
+    <p class="subtitle">
+      Reactive Marko components powered by pure WebAssembly compiled from Rust.
+    </p>
+  </header>
+
+  <main class="grid">
+    <!-- Left Column: Generator Form & Controls -->
+    <section class="card controls-card">
+      <h2>Generate Code</h2>
+
+      <div class="form-group">
+        <label for="url-input">Payload URL (must start with https://)</label>
+        <input
+          id="url-input"
+          class="input-field"
+          type="url"
+          value:=url
+          placeholder="https://example.com"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="type-select">Code Design</label>
+        <div class="segmented-control">
+          <button
+            class={ active: codeType === "cam" }
+            onClick() { codeType = "cam" }
+          >
+            Camera Code
+          </button>
+          <button
+            class={ active: codeType === "nfc" }
+            onClick() { codeType = "nfc" }
+          >
+            NFC Tap Code
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="template-select">Color Template</label>
+        <select
+          id="template-select"
+          class="select-field"
+          value=templateIndex
+          onChange(e) { templateIndex = parseInt(e.target.value, 10) || 0 }
+        >
+          <for|t| of=templates>
+            <option value=t.index>
+              Template ${t.index} (${t.foreground} on ${t.background})
+            </option>
+          </for>
+        </select>
+      </div>
+
+      <div class="quick-links">
+        <span class="label">Sample URLs:</span>
+        <button class="chip" onClick() { url = "https://apple.com" }>
+          apple.com
+        </button>
+        <button class="chip" onClick() { url = "https://appclip.apple.com/id?p=com.example.clip" }>
+          App Clip URL
+        </button>
+        <button class="chip" onClick() { url = "https://app.nextdns.io" }>
+          nextdns.io
+        </button>
+      </div>
+    </section>
+
+    <!-- Center/Right: Visual Preview Component -->
+    <section class="card preview-card">
+      <h2>Live Component</h2>
+      <appclip-code
+        url=url
+        template=templateIndex
+        codeType=codeType
+        size=320
+      />
+    </section>
+
+    <!-- Bottom Full Width: Decoder Component -->
+    <section class="full-width">
+      <appclip-decoder />
+    </section>
+  </main>
+</div>
+
+<style>
+  .container {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .badge {
+    display: inline-block;
+    background: #e0f2fe;
+    color: #0369a1;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+    letter-spacing: 0.3px;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin: 0 0 10px;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    font-size: 1.05rem;
+    color: #6e6e73;
+    margin: 0;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .full-width {
+    grid-column: 1 / -1;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eaeaea;
+  }
+
+  .card h2 {
+    font-size: 1.3rem;
+    margin: 0 0 20px;
+    font-weight: 600;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+  }
+
+  .input-field,
+  .select-field {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    border: 1px solid #d2d2d7;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.2s ease;
+    background: #fff;
+  }
+
+  .input-field:focus,
+  .select-field:focus {
+    border-color: #0071e3;
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+  }
+
+  .segmented-control {
+    display: flex;
+    background: #eef1f4;
+    padding: 4px;
+    border-radius: 10px;
+    gap: 4px;
+  }
+
+  .segmented-control button {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #555;
+    transition: all 0.2s ease;
+  }
+
+  .segmented-control button.active {
+    background: #fff;
+    color: #111;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  }
+
+  .quick-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    font-size: 0.85rem;
+  }
+
+  .quick-links .label {
+    color: #777;
+  }
+
+  .chip {
+    border: 1px solid #e0e0e0;
+    background: #f9f9fb;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    color: #0071e3;
+    transition: background 0.15s ease;
+  }
+
+  .chip:hover {
+    background: #edf4fe;
+  }
+
+  .preview-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  @media (max-width: 768px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "crates/appclipcode",
+    "crates/appclipcode-cli",
+    "crates/appclipcode-wasm",
+]
+resolver = "2"

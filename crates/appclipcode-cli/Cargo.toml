@@ -1,0 +1,12 @@
+[package]
+name = "appclipcode-cli"
+version = "0.1.0"
+edition = "2021"
+description = "CLI tool to generate and scan Apple App Clip Codes (SVG/PNG)"
+
+[[bin]]
+name = "appclipcodegen"
+path = "src/main.rs"
+
+[dependencies]
+appclipcode = { path = "../appclipcode", features = ["png"] }

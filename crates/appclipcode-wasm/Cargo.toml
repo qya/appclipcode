@@ -1,0 +1,11 @@
+[package]
+name = "appclipcode-wasm"
+version = "0.1.0"
+edition = "2021"
+description = "WebAssembly bindings for Apple App Clip Code generator"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+appclipcode = { path = "../appclipcode" }
