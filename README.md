@@ -1,5 +1,6 @@
 # App Clip Code in Pure Rust & WebAssembly
 
+<img src="testdata/issue8/barcode1.svg" width="200" align="right">
 A pure Rust and WebAssembly implementation of Apple's App Clip Code generator and decoder, reverse-engineered for 100% bit-accurate fidelity with Apple's format.
 
 ## Features
@@ -205,3 +206,13 @@ Verification includes:
 - 94 randomized end-to-end roundtrip test vectors.
 - Version 8 optical barcode decoding tests (Apple Pay, Vision Pro ZEISS Optical Inserts, and camera pairing codes).
 - Full SVG parsing and Reed-Solomon error correction validation.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](./LICENSE).
+
+## Disclaimer
+
+This project is an independent, unofficial implementation of the App Clip Code format. It is not affiliated with, authorized by, endorsed by, sponsored by, or otherwise approved by Apple Inc.
+
+Apple, App Clips, and App Clip Code are trademarks of Apple Inc., registered in the U.S. and other countries and regions.
